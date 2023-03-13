@@ -127,67 +127,89 @@ module.exports.addTeacher = async function(req, res){
         });
     }
 
-
-    // (await mongoose.startSession()).withTransaction(async (session) => {
-    //     const favourate = new Studentlike({
-    //         student : req.user._id,
-    //         teacher : req.body.id
-    //     });
-
-        
-    //     const student = await Student.findById(req.user._id);
-    //     student.favouriteTeacher.push(favourate);
-    //     await student.save({session});
-        
-
-    //     const teacher = await Teacher.findById(req.body.id, {session});
-    //     teacher.studentsLike += 1;
-    //     await teacher.save({session});
-
-    //     await favourate.save({session});
-    // })
-    // .then(() => {
-    //     return res.status(200).send({
-    //         success : true,
-    //         mmessage : "Successfully added teacher to favourite list"
-    //     });
-    // })
-    // .catch((error) => {
-        // return res.status(500).send({
-        //     success : false,
-        //     message : "Something went wrong",
-        //     error : error
-        // });
-    // });
-
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-        favourate = await Studentlike.create([{
+    try{
+        favourate = await new Studentlike({
             student : req.user._id,
             teacher : req.body.id
-        }],{session});
+        });
 
-        console.log("Hello World");
-        await Student.findByIdAndUpdate(req.user._id,{$push: {favouriteTeacher : favourate}}, {session});
-        await Teacher.findByIdAndUpdate(req.body.id.teacher,{$inc : {studentsLike : 1}}, {session});
-        await session.commitTransaction();
+        await Student.findByIdAndUpdate(req.user._id,{$push: {favouriteTeacher : favourate}});
+        await Teacher.findByIdAndUpdate(req.body.id,{$inc : {studentsLike : 1}});
+        await favourate.save();
 
         return res.status(200).send({
             success : true,
             mmessage : "Successfully added teacher to favourite list"
         });
-
-    } catch (error) {
-
-        await session.abortTransaction();
-        session.endSession();
+    }
+    catch(err){
         return res.status(500).send({
             success : false,
             message : "Something went wrong",
-            error : error
+            error : err
         });
+    }
 
+    // const session = await mongoose.startSession();
+    // session.startTransaction();
+
+    // try {
+    //     favourate = await Studentlike.create([{
+    //         student : req.user._id,
+    //         teacher : req.body.id
+    //     }],{session});
+
+    //     console.log("Hello World");
+    //     await Student.findByIdAndUpdate(req.user._id,{$push: {favouriteTeacher : favourate}}, {session});
+    //     await Teacher.findByIdAndUpdate(req.body.id.teacher,{$inc : {studentsLike : 1}}, {session});
+    //     await session.commitTransaction();
+
+    //     return res.status(200).send({
+    //         success : true,
+    //         mmessage : "Successfully added teacher to favourite list"
+    //     });
+
+    // } catch (error) {
+
+    //     await session.abortTransaction();
+    //     session.endSession();
+    //     return res.status(500).send({
+    //         success : false,
+    //         message : "Something went wrong",
+    //         error : error
+    //     });
+    // }
+}
+
+module.exports.removeTeacher = async function(req, res){
+    const favourate = await Studentlike.findOne({
+        student : req.user._id,
+        teacher : req.body.id
+    }).exec();
+
+    if(!favourate) {
+        return res.status(400).send({
+            success : false,
+            message : "Teacher is not present in favourite list"
+        });
+    }
+
+    try{
+
+        await Student.findByIdAndUpdate(req.user._id,{$pull: {favouriteTeacher : favourate}});
+        await Teacher.findByIdAndUpdate(req.body.id,{$inc : {studentsLike : -1}});
+        await favourate.save();
+
+        return res.status(200).send({
+            success : true,
+            mmessage : "Successfully added teacher to favourite list"
+        });
+    }
+    catch(err){
+        return res.status(500).send({
+            success : false,
+            message : "Something went wrong",
+            error : err
+        });
     }
 }

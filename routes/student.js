@@ -12,5 +12,6 @@ router.get('/profile', passport.authenticate('jwt', {session : false}), studentC
 router.get('/favourite-teacher', passport.authenticate('jwt', {session : false}), studentController.favouriteTeacher);
 
 router.patch('/add-teacher', passport.authenticate('jwt', {session : false}), studentController.addTeacher);
+router.patch('/remove-teacher', passport.authenticate('jwt', {session : false}), )
 
 module.exports = router;
