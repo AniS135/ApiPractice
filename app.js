@@ -1,5 +1,6 @@
 const express = require("express");
 const jwt = require('jsonwebtoken');
+const dotenv = require('dotenv').config();
 
 const db= require('./config/mongoose');
 const { urlencoded } = require("express");
@@ -13,7 +14,7 @@ const app= express();
 app.use(express.json());
 app.use(express.urlencoded({extended : true}));
 
-const port = 8000;
+const port = process.env.PORT || 5000;
 
 app.use('/',require("./routes/app"));
 

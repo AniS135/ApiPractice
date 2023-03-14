@@ -4,7 +4,7 @@ const ExtractJWT=require('passport-jwt').ExtractJwt;
 
 let opts= {
     jwtFromRequest : ExtractJWT.fromAuthHeaderAsBearerToken(),
-    secretOrKey:  'student&teacher'
+    secretOrKey:  process.env.SECRET_KEY
 }
 
 Student = require('../models/student');

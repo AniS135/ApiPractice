@@ -2,7 +2,7 @@ const Student = require('../models/student');
 const Studentlike = require('../models/studentlike');
 const Teacher = require('../models/teacher');
 const mongoose = require('../config/mongoose');
-const secretKey = 'student&teacher';
+const secretKey = process.env.SECRET_KEY;
 const { hashSync } = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -149,36 +149,6 @@ module.exports.addTeacher = async function(req, res){
             error : err
         });
     }
-
-    // const session = await mongoose.startSession();
-    // session.startTransaction();
-
-    // try {
-    //     favourate = await Studentlike.create([{
-    //         student : req.user._id,
-    //         teacher : req.body.id
-    //     }],{session});
-
-    //     console.log("Hello World");
-    //     await Student.findByIdAndUpdate(req.user._id,{$push: {favouriteTeacher : favourate}}, {session});
-    //     await Teacher.findByIdAndUpdate(req.body.id.teacher,{$inc : {studentsLike : 1}}, {session});
-    //     await session.commitTransaction();
-
-    //     return res.status(200).send({
-    //         success : true,
-    //         mmessage : "Successfully added teacher to favourite list"
-    //     });
-
-    // } catch (error) {
-
-    //     await session.abortTransaction();
-    //     session.endSession();
-    //     return res.status(500).send({
-    //         success : false,
-    //         message : "Something went wrong",
-    //         error : error
-    //     });
-    // }
 }
 
 module.exports.removeTeacher = async function(req, res){
@@ -196,13 +166,13 @@ module.exports.removeTeacher = async function(req, res){
 
     try{
 
-        await Student.findByIdAndUpdate(req.user._id,{$pull: {favouriteTeacher : favourate}});
+        await Student.findByIdAndUpdate(req.user._id,{$pull: {favouriteTeacher : {_id : favourate._id}}});
         await Teacher.findByIdAndUpdate(req.body.id,{$inc : {studentsLike : -1}});
-        await favourate.save();
+        await favourate.deleteOne();
 
         return res.status(200).send({
             success : true,
-            mmessage : "Successfully added teacher to favourite list"
+            mmessage : "Successfully removed teacher from favourite list"
         });
     }
     catch(err){
